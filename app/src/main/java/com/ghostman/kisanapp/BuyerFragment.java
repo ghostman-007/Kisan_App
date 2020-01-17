@@ -21,6 +21,7 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.textfield.TextInputLayout;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
@@ -32,8 +33,6 @@ public class BuyerFragment extends Fragment {
 
     private View rootView;
     private RecyclerView recyclerView;
-    private FirebaseFirestore database = FirebaseFirestore.getInstance();
-    private Crop crop;
 
     public BuyerFragment() {
         // Required empty public constructor
@@ -44,8 +43,7 @@ public class BuyerFragment extends Fragment {
                              Bundle savedInstanceState) {
         rootView = inflater.inflate(R.layout.fragment_buyer, container, false);
 
-        final TextInputLayout tilState = rootView.findViewById(R.id.til_state_fb);
-        final TextInputLayout tilCrop = rootView.findViewById(R.id.til_crop_fb);
+
         final AutoCompleteTextView actvState = rootView.findViewById(R.id.dropdown_state);
         final AutoCompleteTextView actvCrop = rootView.findViewById(R.id.dropdown_crop);
 
@@ -54,128 +52,122 @@ public class BuyerFragment extends Fragment {
         recyclerView.setLayoutManager(new LinearLayoutManager(rootView.getContext()));
         recyclerView.setItemAnimator(new DefaultItemAnimator());
 
-        // FOR TESTING PURPOSE ---- START
-        final ArrayList<Crop> arrayList = new ArrayList<>();
-        Crop c = new Crop();
-        c.setCrop("Barley");
-        c.setStock(100);
-        c.setPrice(20);
-        c.setGovtPrice(25);
-        arrayList.add(c);
-        Crop c1 = new Crop();
-        c1.setCrop("Bulgur");
-        c1.setStock(50);
-        c1.setPrice(20);
-        c1.setGovtPrice(25);
-        arrayList.add(c1);
-        Crop c2 = new Crop();
-        c2.setCrop("Kasha");
-        c2.setStock(500);
-        c2.setPrice(20);
-        c2.setGovtPrice(25);
-        arrayList.add(c2);
-        Crop c3 = new Crop();
-        c3.setCrop("Farrc");
-        c3.setStock(500);
-        c3.setPrice(50);
-        c3.setGovtPrice(50);
-        arrayList.add(c3);
-        Crop c4 = new Crop();
-        c4.setCrop("Quinoa");
-        c4.setStock(200);
-        c4.setPrice(30);
-        c4.setGovtPrice(25);
-        arrayList.add(c4);
-        // TESTING ---- END
+        FirebaseFirestore.getInstance().collection("StatesCrops")
+                .get()
+                .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                    @Override
+                    public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+                        List<String> arrayListStates = new ArrayList<>();
+                        for (QueryDocumentSnapshot documentSnapshot : queryDocumentSnapshots)
+                                arrayListStates.add(documentSnapshot.getId());
 
-        String[] CROP = new String[] {"Barley", "Bulgur", "Farro", "Kasha", "Quinoa", "Wheat Berries" };
-        final ArrayAdapter<String> crop_adapter = new ArrayAdapter<>(rootView.getContext(), R.layout.dropdown_menu_popup_item, CROP);
-        actvCrop.setAdapter(crop_adapter);
+                        ArrayAdapter<String> state_adapter = new ArrayAdapter<>(rootView.getContext(), R.layout.dropdown_menu_popup_item, arrayListStates);
+                        actvState.setAdapter(state_adapter);
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Toast.makeText(rootView.getContext(), "Error Retrieving Data... " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                });
 
-        database.collection("states")
-        .get()
-        .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+        actvState.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
-            public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
-                List<String> arrayListStates = new ArrayList<>();
-                for (QueryDocumentSnapshot documentSnapshot : queryDocumentSnapshots)
-                        arrayListStates.add(documentSnapshot.getId());
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                actvCrop.setText("");
+                final ArrayList<Crop> arrayListCROPS = new ArrayList<>();
+                final RecyclerAdapter recyclerAdapter = new RecyclerAdapter(arrayListCROPS, rootView.getContext());
+                recyclerView.setAdapter(recyclerAdapter);
 
-                ArrayAdapter<String> state_adapter = new ArrayAdapter<>(rootView.getContext(), R.layout.dropdown_menu_popup_item, arrayListStates);
-                actvState.setAdapter(state_adapter);
-            }
-        })
-        .addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                Toast.makeText(rootView.getContext(), "Error Retrieving Data... " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                final ArrayList<String> arrayListCrops = new ArrayList<>();
+                FirebaseFirestore.getInstance().collection("StatesCrops").document(actvState.getText().toString())
+                        .collection("Crops")
+                        .get()
+                        .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                            @Override
+                            public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+                                for (QueryDocumentSnapshot documentSnapshot : queryDocumentSnapshots)
+                                    arrayListCrops.add(documentSnapshot.getId());
+
+                                ArrayAdapter<String> crop_adapter = new ArrayAdapter<>(rootView.getContext(), R.layout.dropdown_menu_popup_item, arrayListCrops);
+                                actvCrop.setAdapter(crop_adapter);
+                            }
+                        })
+                        .addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                Toast.makeText(rootView.getContext(), "Error Retrieving Crops... " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                            }
+                        });
             }
         });
+
 
         actvCrop.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                 if(actvState.getText().toString().isEmpty()) {
+                    actvCrop.setText("");
+                    actvState.setError("Select State");
                     actvState.requestFocus();
                     return;
                 }
 
-                Toast.makeText(rootView.getContext(),tilCrop.getEditText().getText().toString(),Toast.LENGTH_SHORT).show();
-
-                database.collection("state").document(tilState.getEditText().getText().toString())
-                        .collection("phone")
-                        .get()
-                        .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                            @Override
-                            public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                                if (task.isSuccessful()) {
-                                    for (QueryDocumentSnapshot document : task.getResult()) {
-                                        Toast.makeText(rootView.getContext(), tilState.getEditText().getText().toString(), Toast.LENGTH_SHORT).show();
-                                        Toast.makeText(rootView.getContext(), database.collection("states").document(actvState.getText().toString())
-                                                .collection("phone").document(document.getId())
-                                                .collection("crops").document().getPath(), Toast.LENGTH_LONG).show();
-                                    }
-                                }
-                            }
-                        }).addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
-                            @Override
-                            public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
-                                for (QueryDocumentSnapshot documentSnapshot : queryDocumentSnapshots) {
-                                    Toast.makeText(rootView.getContext(), "SUCCESS : " + tilState.getEditText().getText().toString(), Toast.LENGTH_SHORT).show();
-                                    Toast.makeText(rootView.getContext(), database.collection("states").document(actvState.getText().toString())
-                                            .collection("phone").document(documentSnapshot.getId())
-                                            .collection("crops").document().getPath(), Toast.LENGTH_LONG).show();
-                                }
-                            }
-                        }).addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Toast.makeText(rootView.getContext(), "Error retrieving data...", Toast.LENGTH_SHORT).show();
-                    }
-                });
-
-                recyclerView.setAdapter(new RecyclerAdapter(arrayList, rootView.getContext()));
-            }
-        });
-
-        actvState.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                database.collection(tilState.getEditText().getText().toString())
+                final ArrayList<String> arrayListPhones = new ArrayList<>();
+                final ArrayList<Crop> arrayListCROPS = new ArrayList<>();
+                final RecyclerAdapter recyclerAdapter = new RecyclerAdapter(arrayListCROPS, rootView.getContext());
+                recyclerView.setAdapter(recyclerAdapter);
+                FirebaseFirestore.getInstance().collection("StatesCrops").document(actvState.getText().toString())
+                        .collection("Crops").document(actvCrop.getText().toString())
+                        .collection("Phone")
                         .get()
                         .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
                             @Override
                             public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
-                                for (QueryDocumentSnapshot documentSnapshot : queryDocumentSnapshots) {
-                                    crop = documentSnapshot.toObject(Crop.class);
-                                    //ArrayList<Boolean> temp = crop.getGrains();
+                                for (QueryDocumentSnapshot documentSnapshot : queryDocumentSnapshots)
+                                    arrayListPhones.add(documentSnapshot.getId());
+                                for (String i : arrayListPhones) {
+                                    FirebaseFirestore.getInstance().collection("StatesCrops").document(actvState.getText().toString())
+                                            .collection("Crops").document(actvCrop.getText().toString())
+                                            .collection("Phone").document(i)
+                                            .get()
+                                            .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                                                @Override
+                                                public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                                                    if (task.isSuccessful()) {
+                                                        DocumentSnapshot document = task.getResult();
+                                                        if (document != null) {
+                                                            Crop c = new Crop();
+                                                            c.setCrop(document.getString("crop"));
+                                                            c.setStock(document.getLong("quantity"));
+                                                            c.setPrice(document.getLong("price"));
+                                                            c.setGovtPrice(document.getLong("govt_price"));
+                                                            c.setPhone(document.getString("phone"));
+                                                            arrayListCROPS.add(c);
+
+                                                            Toast.makeText(getContext(), " " + document.getString("crop") +
+                                                                    document.getLong("price") +
+                                                                    document.getLong("govt_price") +
+                                                                    document.getLong("quantity") +
+                                                                    document.getString("phone"), Toast.LENGTH_SHORT).show();
+
+                                                            recyclerAdapter.notifyDataSetChanged();
+                                                        }
+                                                    }
+                                                }
+                                            })
+                                            .addOnFailureListener(new OnFailureListener() {
+                                                @Override
+                                                public void onFailure(@NonNull Exception e) {
+                                                    Toast.makeText(getContext(), "Error Retrieving Data...", Toast.LENGTH_SHORT).show();
+                                                }
+                                            });
                                 }
                             }
                         });
-                recyclerView.setAdapter(new RecyclerAdapter(arrayList, rootView.getContext()));
             }
         });
-
         return rootView;
     }
 }

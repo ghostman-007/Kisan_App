@@ -6,14 +6,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Locale;
 
 public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ViewHolder> {
@@ -53,7 +51,7 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ViewHo
             public void onClick(View view) {
                 AlertDialog.Builder builder = new AlertDialog.Builder(context);
                 builder.setTitle(arrayList.get(holder.getAdapterPosition()).getCrop());
-                String message = "Price by Seller : ₹" + arrayList.get(holder.getAdapterPosition()).getPrice();
+                String message = "Seller Number : " + arrayList.get(holder.getAdapterPosition()).getPhone();
                 builder.setMessage(message);
                 AlertDialog alertDialog = builder.create();
                 alertDialog.show();

@@ -14,7 +14,8 @@
         android:layout_marginBottom="15dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/til_name_fs">
+        android:id="@+id/til_name_fs"
+        android:visibility="gone">
 
         <EditText
             android:id="@+id/et_name_fs"
@@ -34,7 +35,8 @@
         android:labelFor="@id/et_phone_fs"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/til_name_fs">
+        android:layout_below="@id/til_name_fs"
+        android:visibility="gone">
 
         <EditText
             android:id="@+id/et_phone_fs"
@@ -52,7 +54,10 @@
         android:id="@+id/til_state_fs"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="15dp"
+        android:layout_marginTop="30dp"
+        android:layout_marginRight="15dp"
+        android:layout_marginLeft="15dp"
+        android:layout_marginBottom="15dp"
         android:layout_below="@id/til_phone_fs"
         android:hint="State">
 
@@ -63,6 +68,24 @@
             android:editable="false" />
     </com.google.android.material.textfield.TextInputLayout>
 
+    <com.google.android.material.textfield.TextInputLayout
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+        android:id="@+id/til_crops_fs"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="20dp"
+        android:layout_below="@id/til_state_fs"
+        android:visibility="visible"
+        android:hint="Crop">
+
+        <AutoCompleteTextView
+            android:id="@+id/actv_dropdown_crops_fs"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:editable="false"
+            android:singleLine="true"/>
+    </com.google.android.material.textfield.TextInputLayout>
+
     <LinearLayout
         android:id="@+id/ll_grains1_FAS"
         android:layout_width="match_parent"
@@ -70,8 +93,9 @@
         android:layout_marginLeft="20dp"
         android:layout_marginRight="20dp"
         android:layout_marginTop="15dp"
-        android:layout_below="@id/til_state_fs"
-        android:orientation="horizontal">
+        android:layout_below="@id/til_crops_fs"
+        android:orientation="horizontal"
+        android:visibility="gone">
 
         <CheckBox
             android:id="@+id/checkBox"
@@ -103,7 +127,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@id/ll_grains1_FAS"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:visibility="gone">
 
         <CheckBox
             android:id="@+id/checkBox4"
@@ -127,6 +152,22 @@
             android:text="Wheat Berries" />
 
     </LinearLayout>
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/til_crops_fs">
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/tv_crop_details_fs"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="20dp"
+            android:text="" />
+
+    </LinearLayout>
+
 
     <Button
         android:id="@+id/bt_save_fs"

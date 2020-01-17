@@ -3,9 +3,12 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_gravity="center_vertical"
+    android:gravity="center_vertical"
     android:background="#008577"
-    tools:context=".MainFragment"
-    android:paddingTop="100dp">
+    tools:context=".MainFragment">
 
     <Button
         android:id="@+id/bt_seller"
@@ -34,5 +37,43 @@
         android:textColor="#fff"
         android:textSize="18sp"
         android:layout_below="@id/bt_seller" />
+
+    <Button
+        android:id="@+id/bt_transport"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="22dp"
+        android:layout_marginStart="22dp"
+        android:layout_marginEnd="22dp"
+        android:background="#d67601"
+        android:text="Transportation"
+        android:textAllCaps="false"
+        android:textColor="#fff"
+        android:textSize="18sp"
+        android:layout_below="@id/bt_buyer" />
+
+    <Button
+        android:id="@+id/bt_officer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="22dp"
+        android:layout_marginStart="22dp"
+        android:layout_marginEnd="22dp"
+        android:background="#d67601"
+        android:text="Officer"
+        android:textAllCaps="false"
+        android:textColor="#fff"
+        android:textSize="18sp"
+        android:layout_below="@id/bt_transport" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="@dimen/fab_margin"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentBottom="true"
+        app:srcCompat="@android:drawable/ic_menu_help" />
 
 </RelativeLayout>
