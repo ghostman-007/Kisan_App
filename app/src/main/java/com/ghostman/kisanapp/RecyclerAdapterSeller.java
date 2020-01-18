@@ -18,12 +18,19 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -101,7 +108,9 @@ public class RecyclerAdapterSeller extends RecyclerView.Adapter<RecyclerAdapterS
                                                 .collection("Phones").document(cropArrayList.get(position).getPhone())
                                                 .collection("Crops").document(cropArrayList.get(position).getCrop())
                                                 .delete();
-                                        Toast.makeText(context, "DocumentSnapshot successfully deleted!",Toast.LENGTH_SHORT).show();
+
+                                        cropArrayList.clear();
+                                        Toast.makeText(context, "Data successfully deleted!",Toast.LENGTH_SHORT).show();
                                     }
                                 })
                                 .addOnFailureListener(new OnFailureListener() {
@@ -110,6 +119,49 @@ public class RecyclerAdapterSeller extends RecyclerView.Adapter<RecyclerAdapterS
                                         Log.w(TAG, "Error deleting document", e);
                                     }
                                 });
+
+                        final String phone = FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber();
+                        final List<String> arrayListStates = new ArrayList<>();
+                        FirebaseFirestore.getInstance().collection("StatesPhones").document(state)
+                                .collection("Phones").document(phone)
+                                .collection("Crops")
+                                .get()
+                                .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                                    @Override
+                                    public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+                                        for (QueryDocumentSnapshot documentSnapshot : queryDocumentSnapshots)
+                                            arrayListStates.add(documentSnapshot.getId());
+                                        for(String i : arrayListStates) {
+                                            FirebaseFirestore.getInstance().collection("StatesPhones").document(state)
+                                                    .collection("Phones").document(phone)
+                                                    .collection("Crops").document(i)
+                                                    .get()
+                                                    .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                                                        @Override
+                                                        public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                                                            if (task.isSuccessful()) {
+                                                                DocumentSnapshot document = task.getResult();
+                                                                if (document != null) {
+                                                                    Crop c = new Crop();
+                                                                    c.setCrop(document.getString("crop"));
+                                                                    c.setStock(document.getLong("quantity"));
+                                                                    c.setPrice(document.getLong("price"));
+                                                                    c.setGovtPrice(document.getLong("govt_price"));
+                                                                    c.setPhone(document.getString("phone"));
+                                                                    cropArrayList.add(c);
+                                                                }
+                                                            }
+                                                        }
+                                                    });
+                                        }
+                                    }
+                                }).addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                            }
+                        });
+                        getItemCount();
+                        notifyDataSetChanged();
                     }
                 });
 
@@ -148,6 +200,72 @@ public class RecyclerAdapterSeller extends RecyclerView.Adapter<RecyclerAdapterS
                                 crop.put("govt_price", Integer.parseInt(govtPrice.getText().toString()));
                                 crop.put("quantity", Integer.parseInt(quantity.getText().toString()));
 
+                                SharedPreferences prefs = context.getSharedPreferences(MY_SHARED_PREFERENCE, MODE_PRIVATE);
+                                String stringName = prefs.getString("name", "Unknown");
+                                final String state = prefs.getString("location", "Unknown");
+                                FirebaseFirestore.getInstance().collection("StatesCrops").document(state)
+                                        .collection("Crops").document(cropArrayList.get(position).getCrop())
+                                        .collection("Phone").document(cropArrayList.get(position).getPhone())
+                                        .update(crop)
+                                        .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                            @Override
+                                            public void onSuccess(Void aVoid) {
+                                                FirebaseFirestore.getInstance().collection("StatesPhones").document(state)
+                                                        .collection("Phones").document(cropArrayList.get(position).getPhone())
+                                                        .collection("Crops").document(cropArrayList.get(position).getCrop())
+                                                        .update(crop);
+                                                Toast.makeText(context, "Data successfully updated!",Toast.LENGTH_SHORT).show();
+                                                cropArrayList.clear();
+                                            }
+                                        })
+                                        .addOnFailureListener(new OnFailureListener() {
+                                            @Override
+                                            public void onFailure(@NonNull Exception e) {
+                                                Log.w(TAG, "Error updating crop", e);
+                                            }
+                                        });
+
+                                final String phone = FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber();
+                                final List<String> arrayListStates = new ArrayList<>();
+                                FirebaseFirestore.getInstance().collection("StatesPhones").document(state)
+                                        .collection("Phones").document(phone)
+                                        .collection("Crops")
+                                        .get()
+                                        .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                                            @Override
+                                            public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+                                                for (QueryDocumentSnapshot documentSnapshot : queryDocumentSnapshots)
+                                                    arrayListStates.add(documentSnapshot.getId());
+                                                for(String i : arrayListStates) {
+                                                    FirebaseFirestore.getInstance().collection("StatesPhones").document(state)
+                                                            .collection("Phones").document(phone)
+                                                            .collection("Crops").document(i)
+                                                            .get()
+                                                            .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                                                                @Override
+                                                                public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                                                                    if (task.isSuccessful()) {
+                                                                        DocumentSnapshot document = task.getResult();
+                                                                        if (document != null) {
+                                                                            Crop c = new Crop();
+                                                                            c.setCrop(document.getString("crop"));
+                                                                            c.setStock(document.getLong("quantity"));
+                                                                            c.setPrice(document.getLong("price"));
+                                                                            c.setGovtPrice(document.getLong("govt_price"));
+                                                                            c.setPhone(document.getString("phone"));
+                                                                            cropArrayList.add(c);
+                                                                        }
+                                                                    }
+                                                                }
+                                                            });
+                                                }
+                                            }
+                                        }).addOnFailureListener(new OnFailureListener() {
+                                    @Override
+                                    public void onFailure(@NonNull Exception e) {
+                                    }
+                                });
+
                                 alertDialog.cancel();
                             }
                         });
@@ -158,32 +276,10 @@ public class RecyclerAdapterSeller extends RecyclerView.Adapter<RecyclerAdapterS
                                 alertDialog.cancel();
                             }
                         });
-
-                        SharedPreferences prefs = context.getSharedPreferences(MY_SHARED_PREFERENCE, MODE_PRIVATE);
-                        String stringName = prefs.getString("name", "Unknown");
-                        final String state = prefs.getString("location", "Unknown");
-                        FirebaseFirestore.getInstance().collection("StatesCrops").document(state)
-                                .collection("Crops").document(cropArrayList.get(position).getCrop())
-                                .collection("Phone").document(cropArrayList.get(position).getPhone())
-                                .update(crop)
-                                .addOnSuccessListener(new OnSuccessListener<Void>() {
-                                    @Override
-                                    public void onSuccess(Void aVoid) {
-                                        FirebaseFirestore.getInstance().collection("StatesPhones").document(state)
-                                                .collection("Phones").document(cropArrayList.get(position).getPhone())
-                                                .collection("Crops").document(cropArrayList.get(position).getCrop())
-                                                .update(crop);
-                                        Toast.makeText(context, "DocumentSnapshot successfully deleted!",Toast.LENGTH_SHORT).show();
-                                    }
-                                })
-                                .addOnFailureListener(new OnFailureListener() {
-                                    @Override
-                                    public void onFailure(@NonNull Exception e) {
-                                        Log.w(TAG, "Error deleting document", e);
-                                    }
-                                });
                     }
                 });
+                getItemCount();
+                notifyDataSetChanged();
                 dialog.show();
             }
         });

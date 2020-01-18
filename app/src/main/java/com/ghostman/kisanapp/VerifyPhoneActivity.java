@@ -256,7 +256,7 @@ public class VerifyPhoneActivity extends AppCompatActivity {
         @Override
          public void onCodeSent(String s, PhoneAuthProvider.ForceResendingToken forceResendingToken) {
              super.onCodeSent(s, forceResendingToken);
-            Toast.makeText(VerifyPhoneActivity.this, "CODE SENT...", Toast.LENGTH_SHORT).show();
+             Toast.makeText(VerifyPhoneActivity.this, "CODE SENT...", Toast.LENGTH_SHORT).show();
              verificationID = s;
          }
 
@@ -267,7 +267,7 @@ public class VerifyPhoneActivity extends AppCompatActivity {
             if(code != null) {
                 etCode.setText(code);
                 btVerify.setEnabled(true);
-                verifyCode(code);
+                //verifyCode(code);
             } else {
                 //Toast.makeText(VerifyPhoneActivity.this, "Inform Developer Immediately...", Toast.LENGTH_LONG).show();
                  etCode.setText("Verified");
